@@ -41,170 +41,15 @@ export default function Toolbar() {
             <span style="font-weight: 700;">lot</span>
           </a>
         </h1>
-        <RunButton />
-        <div
-          class="relative cursor-pointer w-max h-full flex items-center p-1 hover:bg-white hover:bg-opacity-10"
-          onClick={() => saveFile(getCode())}>
-          {needsSaving ? 'save* (ctrl/cmd+s)' : 'save (ctrl/cmd+s)'}
-        </div>
-        <NewButton />
-        <OpenButton />
-        <div
-          class="relative cursor-pointer w-max h-full flex items-center p-1 hover:bg-white hover:bg-opacity-10"
-          onClick={() => {
-            const ogCode = getCode()
-            const formatted = formatCode(ogCode)
-            view.dispatch({
-              changes: {
-                from: 0,
-                to: ogCode.length,
-                insert: formatted
-              }
-            })
-          }}>
-          tidy code
-        </div>
-        <div
-          class="relative cursor-default w-max h-full flex items-center p-1"
-          onMouseEnter={() => setHidden(false)}
-          onMouseLeave={() => setHidden(true)}>
-          <div>download</div>
-          <div
-            class={[
-              hidden ? 'hidden' : '',
-              'border border-white border-opacity-10',
-              'bg-[--primary] absolute z-50 top-full p-1 rounded-md'
-            ].join(' ')}>
-            <DownloadButton />
-            <DownloadSVG />
-            <DownloadPNG />
-            <div
-              class="w-max p-1 rounded hover:bg-white hover:bg-opacity-10"
-              onClick={e => {
-                const { turtles } = getStore()
-                const { isVisible } = createMask()
 
-                // const newTurtle = new Turtle();
-                // let lastVisible = false;
 
-                // turtles.forEach(turtle => {
-                //   turtle
-                //   .resample(0.1)
-                //   .path.forEach(pl => {
-                //     pl.forEach((pt, i) => {
-                //       const [x, y] = pt;
-                //       const visible = isVisible(x, y);
-
-                //       if (lastVisible && i > 0 && visible) newTurtle.goTo([x, y]);
-                //       else newTurtle.jump([x, y]);
-                //       lastVisible = visible;
-                //     })
-                //   })
-                // })
-
-                // newTurtle.simplify(.01);
-                // newTurtle.style.fill ="none";
-                // newTurtle.style.stroke = "black";
-
-                // patchStore({
-                //   turtles: [newTurtle]
-                // })
-
-                turtles.forEach(turtle => {
-                  turtle.resample(0.01).iteratePath(([x, y], t) => {
-                    const visible = isVisible(x, y)
-
-                    if (!visible) return 'BREAK'
-                  })
-
-                  // turtle.simplify(0.01);
-                  turtle.style.fill = 'none'
-                })
-
-                patchStore({ turtles })
-              }}>
-              cull hidden lines
-            </div>
-          </div>
-        </div>
+    
       </div>
 
       <div class="flex items-center h-full">
-        <div class="group flex items-center relative h-full cursor-pointer p-1">
-          machine control
-          <div class="hidden group-hover:flex flex-col absolute top-full right-0 bg-[var(--primary)] w-max z-[99999]">
-            <div
-              class="p-2 hover:bg-white hover:bg-opacity-10"
-              data-evt-connectTrigger>
-              {connected ? 'disconnect from' : 'connect to'} machine
-            </div>
 
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-machineTrigger>
-              {machineRunning ? 'stop' : 'run'} machine
-            </div>
-
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-penUp>
-              pen up
-            </div>
-
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-penDown>
-              pen down
-            </div>
-
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-motorsOn>
-              motors on
-            </div>
-
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-motorsOff>
-              motors off
-            </div>
-
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-moveTowardsOrigin>
-              move towards origin
-            </div>
-
-            <div
-              class={`${
-                connected ? '' : 'hidden'
-              } p-2 hover:bg-white hover:bg-opacity-10`}
-              data-evt-setOrigin>
-              set origin
-            </div>
-
-            {/* <div class={`${connected ? "" : "hidden"} p-2 hover:bg-white hover:bg-opacity-10`} data-evt-goToOrigin>
-              go to origin
-            </div>*/}
-
-            {/* <div class={`${connected ? "" : "hidden"} p-2 hover:bg-white hover:bg-opacity-10`} data-evt-homeMachine>
-              home machine
-            </div>*/}
-          </div>
-        </div>
-        {/*<MachineControls />*/}
+        
+        <MachineControls />
         <GitHubLink />
         <SettingsButton />
       </div>
@@ -257,205 +102,8 @@ function getCode() {
   return code
 }
 
-function DownloadButton() {
-  return (
-    <div
-      class={styles.dropdownEntry}
-      onClick={() => download('project.js', getCode())}>
-      js
-    </div>
-  )
-}
 
-function NewButton() {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => {
-        loadCodeFromString(defaultProgram)
-      }}>
-      new
-    </Button>
-  )
-}
 
-function DownloadSVG() {
-  return (
-    <div
-      class={styles.dropdownEntry}
-      onClick={() => {
-        const { turtles, docDimensions } = getStore()
-
-        const turtleToPathData = t => {
-          let d = ''
-
-          t.path.forEach(pl =>
-            pl.forEach((pt, i) => {
-              const [x, y] = pt
-              if (i === 0) d += `M ${x} ${y}`
-              else d += `L ${x} ${y}`
-            })
-          )
-
-          return d
-        }
-
-        const turtleToPath = t => {
-          const d = turtleToPathData(t)
-
-          return `<path 
-                    d="${d}" 
-                    stroke-width="${t.style.width}" 
-                    stroke="${t.style.stroke}" 
-                    fill="${t.style.fill}" 
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="transform: scale(1, 1);"
-                    />`
-        }
-
-        const paths = turtles.map(turtleToPath)
-
-        const svg = `
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  viewBox="0 0 ${docDimensions.width} ${docDimensions.height}" 
-                  width="${docDimensions.width}mm" 
-                  height="${docDimensions.height}mm"
-                  style="transform: scale(1, -1)">
-                    ${paths.join('\n')}
-                </svg>
-            `
-        download('anon.svg', svg)
-      }}>
-      svg
-    </div>
-  )
-}
-
-function DownloadPNG() {
-  return (
-    <div
-      class={styles.dropdownEntry}
-      onClick={() => {
-        const { turtles, docDimensions } = getStore()
-
-        const turtleToPathData = t => {
-          let d = ''
-
-          t.path.forEach(pl =>
-            pl.forEach((pt, i) => {
-              const [x, y] = pt
-              if (i === 0) d += `M ${x} ${y}`
-              else d += `L ${x} ${y}`
-            })
-          )
-
-          return d
-        }
-
-        const turtleToPath = t => {
-          const d = turtleToPathData(t)
-
-          return `<path 
-                    d="${d}" 
-                    stroke-width="${t.style.width}" 
-                    stroke="${t.style.stroke}" 
-                    fill="${t.style.fill}" 
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="transform: scale(1, 1);"
-                    />`
-        }
-
-        const paths = turtles.map(turtleToPath)
-
-        const svg = `
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  viewBox="0 0 ${docDimensions.width} ${docDimensions.height}" 
-                  width="${docDimensions.width}mm" 
-                  height="${docDimensions.height}mm"
-                  style="transform: scale(1, -1)">
-                    ${paths.join('\n')}
-                </svg>
-            `
-
-        // Create a new Image element
-        const img = new Image()
-        img.onload = function () {
-          // Create a temporary canvas
-          const canvas = document.createElement('canvas')
-          canvas.width = img.width
-          canvas.height = img.height
-
-          // Draw the image on the canvas
-          const context = canvas.getContext('2d')
-          context.drawImage(img, 0, 0)
-
-          // Convert canvas to PNG data URL
-          const pngDataUrl = canvas.toDataURL('image/png')
-
-          // Create a download link
-          const downloadLink = document.createElement('a')
-          downloadLink.href = pngDataUrl
-          downloadLink.download = 'image.png'
-          downloadLink.textContent = 'Download PNG'
-
-          // Simulate a click on the download link
-          downloadLink.click()
-        }
-
-        // Convert SVG to data URL
-        const svgDataUrl =
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
-
-        // Set the Image source to the SVG data URL
-        img.src = svgDataUrl
-      }}>
-      png
-    </div>
-  )
-}
-
-function OpenButton() {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => {
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = '.js'
-        input.onchange = () => {
-          if (input.files?.length) {
-            const file = input.files[0]
-            const reader = new FileReader()
-            reader.onload = () => {
-              if (typeof reader.result === 'string') {
-                loadCodeFromString(reader.result)
-              }
-            }
-            reader.readAsText(file)
-          }
-        }
-        input.click()
-      }}>
-      open
-    </Button>
-  )
-}
-
-function formatCode(code) {
-  try {
-    const options = {
-      indent_size: 2
-    }
-    return js_beautify(code, options)
-  } catch (error) {
-    console.log(error)
-    return code // return the original code if there's an error
-  }
-}
 
 function MachineControls() {
   const { inst, running } = getStore()
@@ -477,7 +125,7 @@ function MachineControls() {
           {/* separator */}
           <div class={styles.separator} />
           <Button variant="ghost" loading={running} onClick={runMachine}>
-            run machine
+            New Game
           </Button>
         </>
       ) : (
@@ -488,6 +136,8 @@ function MachineControls() {
       )}
     </div>
   )
+}
+function newGame() {
 }
 
 function SettingsButton() {

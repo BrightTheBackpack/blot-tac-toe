@@ -1,2 +1,0 @@
-- CarriagePlate.stl is assembled from aluminum plate
-- For the carriage, you can either print EccentricCarriage.stl by itself, or print ReinforcedCarriage.stl and add the aluminum CarriagePlate.stl to it during assembly

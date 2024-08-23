@@ -12,17 +12,101 @@ import CodeMirror from './CodeMirror.js'
 import { useEffect, useRef, useState } from 'preact/hooks'
 import Help from './Help.js'
 import preview from '@astrojs/node/preview.js'
-
+import { addMachineControl } from '../lib/events/addMachineControl.js'
 export default function Editor() {
+  // addMachineControl()
   const [width, setWidth] = useState(50)
   const [tab, setTab] = useState('workshop')
 
   const { theme } = getStore()
 
   const INIT_HELP_HEIGHT = 40
+
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
+
   const [helpHeight, setHelpHeight] = useState(INIT_HELP_HEIGHT)
 
   useEffect(() => {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      if (video) {
+        video.srcObject = stream
+        video.play()
+      }
+    })
+    .catch(err => {
+      console.error('Error accessing webcam: ', err)
+    })
+  
+
+    const processFrame = () => {
+      
+      if (video && ctx) {
+      
+        // Draw the current video frame onto the canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+        // Get the image data from the canvas and process it
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const base64 = canvas.toDataURL()
+        console.log(base64)
+        const xhr = new XMLHttpRequest();
+        const url = "https://cb6f-35-237-238-118.ngrok-free.app/";
+        
+        // Open a connection to the server
+        xhr.open("POST", url, false);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        
+        // Define a callback function to handle the response
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              
+              const response = JSON.parse(xhr.responseText);
+              console.log("Response:", response);
+              if(response.toString().contains("png")){
+              const imgToRemove = document.getElementById('myImage');
+              if (imgToRemove) {
+                imgToRemove.remove();
+              }
+              var image = new Image();
+              image.src = response
+              document.body.appendChild(image);
+              image.id = 'myImage';
+              }
+   
+            } else {
+              console.error("Error:", xhr.statusText);
+            }
+          }
+        };
+        
+        // Prepare the data to be sent
+        const base64Image = base64
+        const data = JSON.stringify({ base64: base64Image });
+        
+        // Send the request with the base64 data
+        xhr.send(data);
+
+
+        // Process the image data (e.g., apply filters, analyze it, etc.)
+        console.log('Processing frame...')
+      }
+    }
+    const intervalId = setInterval(processFrame, 1000)
+
+    return () => {
+      clearInterval(intervalId)
+      if (video && video.srcObject) {
+        const stream = video.srcObject
+        const tracks = stream.getTracks()
+        tracks.forEach(track => track.stop())
+      }
+    }
     addEditorResizing(setWidth, theme)
     addHelpResizing(setHelpHeight, editorContainer, theme)
   }, [])
@@ -63,26 +147,23 @@ export default function Editor() {
               'flex-direction': 'column',
               'overflow': 'none'
             }}>
-            <div style={{ flex: 1, overflow: 'auto' }}>
-              <CodeMirror />
-            </div>
-            <div>
-              <Console />
-              <Error />
-            </div>
+       
+        
           </div>
+          <video
+              ref={videoRef}
+              width="640"
+              height="480"
+              autoPlay
+              muted
+            ></video>
+            <canvas ref={canvasRef} width="640" height="480" style={{ display: 'none' }}></canvas>
           <div
             class={`${styles.vertBar} resize-code-trigger`}
             style={{ left: `${width}%` }}></div>
           <div class={styles.right} style={{ width: `${100 - width}%` }}>
-            <Preview />
-            <div
-              class={`${styles.horizBar} resize-help-trigger`}
-              style={{
-                top: `${100 - helpHeight}%`,
-                width: `${100 - width}%`
-              }}></div>
-            <Help toggleClose={closeHelpPane} helpHeight={helpHeight} />
+           
+        
           </div>
         </div>
       </div>
