@@ -63,6 +63,7 @@ export default function Toolbar() {
   }
 
 
+
   return (
     <div class={styles.root}>
       <div class="flex items-center h-full">
@@ -74,62 +75,15 @@ export default function Toolbar() {
           </a>
         </h1>
         <RunButton />
-        <div class={dropdownContainer}>
-        <img src="/icons/file.svg"/>
-          {needsSaving ? 'File*' : "File"}
-          <div class={dropdownClasses + " left-0 \n " + css}>
-            <div class={menuItemClasses} onClick={() => patchStore({ saveToCloudModalOpen: true })}>
-              Save to cloud (ctrl/cmd+s)
-            </div>
-            <div class={menuItemClasses} onClick={() => patchStore({ cloudFilesModalOpen: true })}>
-              Open from cloud
-            </div>
-            <div class={menuItemClasses} onClick={() => loadCodeFromString(defaultProgram)}>
-              New
-            </div>
-            <div class={menuItemClasses} onClick={() => saveFile(getCode())}>
-              Save to disk
-            </div>
-            <div class={menuItemClasses} onClick={openFromDisk}>
-              Open from disk
-            </div>
-            <div class={menuItemClasses} onClick={() => createShareLink(getCode())}>
-              Create share link{tidyCode}
-            </div>
-          </div>
 
-        </div>
-        {/* <div class={menuItemClasses} onClick={tidyCode}>
-          Tidy code
-        </div> */}
-       {/* <div class={menuItemClasses} onClick={animateLines}>
-          animate
-        </div> */}
-        <a class={menuItemClasses} href="/docs" target="_blank" rel="noopener noreferrer">
-          <img src="/icons/book.svg"/>
-           Docs
-        </a>
-        <div class={dropdownContainer}>
-          <div class={menuItemClasses} >
-          <img src="/icons/download.svg"/>
-            Download
-          </div>
-          <div class={dropdownClasses + " left-0 \n " + css}>
-            <DownloadButton />
-            <DownloadSVG />
-            <DownloadPNG />
-          </div>
-        </div>
-        <a class={menuItemClasses} href="/submitting" target="_blank" rel="noopener noreferrer">
-          <img src="/icons/question.svg"/>
-           What do I make?
-        </a>
+      
+      
+
+ 
       </div>
 
       <div class="flex items-center h-full">
-        <div class="text-sm text-gray-300 px-3 translate-y-[1px] underline cursor-pointer" is-login-modal onClick={loginClick}>
-          {loginName === "" ? "log in to save" : "logged in as: " + loginName}
-        </div>
+  
         <div class={dropdownContainer}>
           Machine control
           <div class={dropdownClasses + " right-0 \n " + css}>
@@ -174,26 +128,13 @@ export default function Toolbar() {
             </div>*/}
           </div>
         </div>
-        <GitHubLink />
-        <SettingsButton />
+
       </div>
     </div>
   )
 }
 
-function GitHubLink() {
-  return (
-    <Button variant="ghost">
-      <a
-        style={{ all: 'unset' }}
-        href="https://github.com/hackclub/blot/tree/main"
-        rel="noreferrer"
-        target="_blank">
-        <GitHubIcon className={styles.icon} />
-      </a>
-    </Button>
-  )
-}
+
 
 function RunButton() {
   // keyboard shortcut - shift+enter
@@ -212,7 +153,7 @@ function RunButton() {
   }, [])
 
   return (
-    <Button class="relative" variant="ghost" onClick={() => runCode()}>
+    <Button class="relative" variant="ghost" onClick={() => getCode()}>
       <div class={menuItemClasses}>
       <img src="/icons/run.svg"/>
       Run (shift+enter)
@@ -227,395 +168,9 @@ function RunButton() {
 }
 
 function getCode() {
-  const { view } = getStore()
-
-  const code = view.state.doc.toString()
-
-  return code
+  let code= getStore().codeRunning
+  patchStore({codeRunning: !code})
 }
 
-function DownloadButton() {
-  return (
-    <div
-      class={menuItemClasses}
-      onClick={() => download('project.js', getCode())}>
-      js
-    </div>
-  )
-}
 
-function DownloadSVG() {
-  return (
-    <div
-      class={menuItemClasses}
-      onClick={() => {
-        const { turtles, docDimensions } = getStore()
-
-        const turtleToPathData = t => {
-          let d = ''
-
-          t.path.forEach(pl =>
-            pl.forEach((pt, i) => {
-              const [x, y] = pt
-              if (i === 0) d += ` M ${x.toFixed(6)} ${y.toFixed(6)} `
-              else d += ` L ${x.toFixed(6)} ${y.toFixed(6)} `
-            })
-          )
-
-          return d.trim();
-        }
-
-        const turtleToPath = t => {
-          const d = turtleToPathData(t)
-
-          return `<path 
-                    d="${d}" 
-                    stroke-width="${t.style.width}" 
-                    stroke="${t.style.stroke}" 
-                    fill="${t.style.fill}" 
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="transform: scale(1, 1);"
-                    />`
-        }
-
-        const paths = turtles.map(turtleToPath)
-
-        const svg = `
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  viewBox="0 0 ${docDimensions.width} ${docDimensions.height}" 
-                  width="${docDimensions.width}mm" 
-                  height="${docDimensions.height}mm"
-                  style="transform: scale(1, -1)">
-                    ${paths.join('\n')}
-                </svg>
-            `
-        download('anon.svg', svg)
-      }}>
-      svg
-    </div>
-  )
-}
-
-function DownloadPNG() {
-  return (
-    <div
-      class={menuItemClasses}
-      onClick={() => {
-        const { turtles, docDimensions } = getStore()
-
-        const turtleToPathData = t => {
-          let d = ''
-
-          t.path.forEach(pl =>
-            pl.forEach((pt, i) => {
-              const [x, y] = pt
-              if (i === 0) d += `M ${x} ${y}`
-              else d += ` L ${x} ${y}`
-            })
-          )
-
-          return d
-        }
-
-        const turtleToPath = t => {
-          const d = turtleToPathData(t)
-
-          return `<path 
-                    d="${d}" 
-                    stroke-width="${t.style.width}" 
-                    stroke="${t.style.stroke}" 
-                    fill="${t.style.fill}" 
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="transform: scale(1, 1);"
-                    />`
-        }
-
-        const paths = turtles.map(turtleToPath)
-
-        const svg = `
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  viewBox="0 0 ${docDimensions.width} ${docDimensions.height}" 
-                  width="${docDimensions.width}mm" 
-                  height="${docDimensions.height}mm"
-                  style="transform: scale(1, -1)">
-                    ${paths.join('\n')}
-                </svg>
-            `
-
-        // Create a new Image element
-        const img = new Image()
-        img.onload = function () {
-          // Create a temporary canvas
-          const canvas = document.createElement('canvas')
-          canvas.width = img.width
-          canvas.height = img.height
-
-          // Draw the image on the canvas
-          const context = canvas.getContext('2d')
-          context.drawImage(img, 0, 0)
-
-          // Convert canvas to PNG data URL
-          const pngDataUrl = canvas.toDataURL('image/png')
-
-          // Create a download link
-          const downloadLink = document.createElement('a')
-          downloadLink.href = pngDataUrl
-          downloadLink.download = 'image.png'
-          downloadLink.textContent = 'Download PNG'
-
-          // Simulate a click on the download link
-          downloadLink.click()
-        }
-
-        // Convert SVG to data URL
-        const svgDataUrl =
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
-
-        // Set the Image source to the SVG data URL
-        img.src = svgDataUrl
-      }}>
-      png
-    </div>
-  )
-}
-
-function OpenButton() {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => {
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = '.js'
-        input.onchange = () => {
-          if (input.files?.length) {
-            const file = input.files[0]
-            const reader = new FileReader()
-            reader.onload = () => {
-              if (typeof reader.result === 'string') {
-                loadCodeFromString(reader.result)
-              }
-            }
-            reader.readAsText(file)
-          }
-        }
-        input.click()
-      }}>
-      open
-    </Button>
-  )
-}
-
-function formatCode(code) {
-  try {
-    const options = {
-      indent_size: 2,
-      "brace_style": "collapse,preserve-inline",
-    }
-    return js_beautify(code, options)
-  } catch (error) {
-    console.log(error)
-    return code // return the original code if there's an error
-  }
-}
-
-function SettingsButton() {
-  const { theme, vimMode, loginName } = getStore()
-  let css = "bg-[var(--primary)]"
-  if(theme == "dark"){
-    css = "bg-[var(--primary-dark)]"
-  }
-
-  return (
-    <div class={dropdownContainer}>
-      <div>
-        <a style={{ all: 'unset' }}>
-          <SettingsIcon className={styles.icon} />
-        </a>
-      </div>
-      <div class={dropdownClasses + " right-0 \n " + css}>
-        <div
-          class={menuItemClasses}
-          onClick={() => {
-            patchStore({ vimMode: !vimMode })
-            localStorage.setItem('vimMode', (!vimMode).toString())
-          }}>
-          <KeyboardIcon className={styles.icon} />
-          <span class="px-2">{vimMode ? 'Disable' : 'Enable'} vim mode</span>
-        </div>
-        <div
-          class={menuItemClasses}
-          onClick={() => {
-            const newTheme = theme === 'dark' ? 'light' : 'dark'
-            patchStore({
-              theme: newTheme
-            })
-
-            document.body.dataset.theme = newTheme
-
-            localStorage.setItem('colorTheme', newTheme)
-
-            
-
-          }}>
-         
-          <BrightnessContrastIcon className={styles.icon} />
-          <span class="px-2">Toggle Dark Mode</span>
-        </div>
-        
-        { loginName && 
-          <div class="p-2 hover:bg-white hover:bg-opacity-10" onClick={logout}>
-            Log out
-          </div>
-        }
-      </div>
-    </div>
-  )
-}
-
-async function logout() {
-  const { loginName, sessionKey } = getStore();
-
-  const [ res, err] = await post("/logout", { 
-    sessionKey,
-    email: loginName,
-  });
-
-  if (err) {
-    console.log(err);
-    return;
-  }
-
-  localStorage.setItem('session_secret_key', "");
-  patchStore({ files: [], loginName: "", cloudFileId: "" });
-}
-
-function tidyCode() {
-  const { view } = getStore()
-
-  const ogCode = getCode()
-  const formatted = formatCode(ogCode)
-  view.dispatch({
-    changes: {
-      from: 0,
-      to: ogCode.length,
-      insert: formatted
-    }
-  })       
-}
-
-function openFromDisk() {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.js'
-  input.onchange = () => {
-    if (input.files?.length) {
-      const file = input.files[0]
-      const reader = new FileReader()
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          loadCodeFromString(reader.result)
-        }
-      }
-      reader.readAsText(file)
-    }
-  }
-  input.click()
-}
-
-function loginClick() {
-  const { loginName } = getStore();
-
-  if (loginName === "") {
-    patchStore({ loginModalOpen: true });
-  } else {
-    // log out or change account
-  }
-}
-
-let animateState = {
-  animating: false,
-  ogTurtles: [],
-  intervalId: null,
-}
-
-function animateLines() {
-
-  if (animateState.animating) {
-    clearInterval(animateState.intervalId);
-  }
-
-  const turtles = animateState.animating
-    ? animateState.ogTurtles
-    : getStore().turtles;
-
-  animateState.animating = true;
-  animateState.ogTurtles = turtles;
-
-  // console.log({
-  //   turtles,
-  //   tk
-  // })
-
-  const styleMap = {};
-
-  let plIndex = 0;
-  turtles.forEach(t => {
-    t.path.forEach(pl => {
-      styleMap[plIndex] = t.style;
-      plIndex++;
-    })
-  })
-
-  const pls = turtles.map(t => t.path).flat();
-
-  const ogPls = tk.copy(pls);
-
-  const resampled = tk.resample(pls, 0.1);
-
-  let totalTime = 3000; // should be determined by length of line and timePerMM
-  let deltaTime = 10;
-
-  // console.time()
-  let elapsedTime = 0;
-  animateState.intervalId = setInterval(() => {
-    if (elapsedTime >= totalTime) {
-      clearInterval(animateState.intervalId);
-      animateState.animating = false;
-      patchStore({
-        turtles: animateState.ogTurtles
-      })
-
-      // console.timeEnd();
-      return;
-    }
-    const turtles = mapPlsToTurtles(elapsedTime/totalTime)
-    // console.log({ turtles, totalT });
-
-    patchStore({
-      turtles
-    });
-
-    elapsedTime += deltaTime;
-
-  }, deltaTime);
-
-  function mapPlsToTurtles(t) {
-    const tempPls = tk.trim(tk.copy(resampled), 0, t);
-    const tempTurtles = [];
-
-    tempPls.forEach((pl, i) => {
-      tempTurtles.push({
-        path: [ pl ],
-        style: styleMap[i]
-      })
-    }) 
-
-    return tempTurtles;
-  }
-}
 
