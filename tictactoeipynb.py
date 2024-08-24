@@ -49,11 +49,11 @@ def make_edges_white(image, w,center):
     return result
 
 
-def img():
+def img(image):
 
-    image_file = "/My photo - Date (4).jpg"
-    image = Image.open(image_file).convert('RGB')
-    image = np.array(image)
+    # image_file = "/My photo - Date (4).jpg"
+    # image = Image.open(image_file).convert('RGB')
+    # image = np.array(image)
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Edge detection
@@ -86,9 +86,13 @@ def img():
     pts = np.float32([point[0] for point in board_contour])
     side = max(np.linalg.norm(pts[0] - pts[1]), np.linalg.norm(pts[1] - pts[2]),
                np.linalg.norm(pts[2] - pts[3]), np.linalg.norm(pts[3] - pts[0]))
-    dst = np.float32([[0, 0], [side - 1, 0], [side - 1, side - 1], [0, side - 1]])
+
+    dst = np.float32([[0, side - 1],[0, 0], [side - 1, 0],[side - 1, side - 1] ])
+
     matrix = cv2.getPerspectiveTransform(pts, dst)
     board = cv2.warpPerspective(gray, matrix, (int(side), int(side)))
+    board = cv2.flip(board, 1)
+
     cv2_imshow( board)  # Save warped board image
 
     # Divide the board into 9 cells
@@ -147,9 +151,9 @@ def img():
           else:
             board_state.append("blank")
 
-          #cv2.drawContours(cell, contours, -1, (255, 255, 255), 2)
-          # cv2.circle(black_pixels, (int(center[0]), int(center[1])), 10, (0, 0, 255), -1)
-          #cv2_imshow(cell)
+          cv2.drawContours(cell, contours, -1, (255, 255, 255), 2)
+          #cv2.circle(black_pixels, (int(center[0]), int(center[1])), 10, (0, 0, 255), -1)
+          cv2_imshow(cell)
       cv2_imshow(black_pixels)
 
 
@@ -186,12 +190,12 @@ def img():
     # return board_state
     _, buffer = cv2.imencode('.png', board)  # Use '.jpg' for JPEG
 
-    # Step 3: Convert the buffer to a base64 string
-    # base64_string = base64.b64encode(buffer).decode('utf-8')
-    # data_uri = f"data:image/png;base64,{base64_string}"
+    #Step 3: Convert the buffer to a base64 string
+    base64_string = base64.b64encode(buffer).decode('utf-8')
+    data_uri = f"data:image/png;base64,{base64_string}"
 
-    return board_state
-img()
+    return [board_state, data_uri]
+# img()
 
 !pip install flask_cors
 
