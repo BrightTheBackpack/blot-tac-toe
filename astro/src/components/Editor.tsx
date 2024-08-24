@@ -24,12 +24,14 @@ export default function Editor() {
 
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
-
+  const boardRef = useRef("test")
+  const boardimageRef = useRef(null)
   const [helpHeight, setHelpHeight] = useState(INIT_HELP_HEIGHT)
 
   useEffect(() => {
     const video = videoRef.current
     const canvas = canvasRef.current
+    //const board = boardRef.current
     const ctx = canvas.getContext('2d')
     navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
@@ -53,9 +55,10 @@ export default function Editor() {
         // Get the image data from the canvas and process it
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         const base64 = canvas.toDataURL()
+        boardRef.current = "proccessing frame"
         console.log(base64)
         const xhr = new XMLHttpRequest();
-        const url = "https://cb6f-35-237-238-118.ngrok-free.app/";
+        const url = "https://997a-34-29-220-193.ngrok-free.app/";
         
         // Open a connection to the server
         xhr.open("POST", url, false);
@@ -67,17 +70,11 @@ export default function Editor() {
             if (xhr.status === 200) {
               
               const response = JSON.parse(xhr.responseText);
-              console.log("Response:", response);
-              if(response.toString().contains("png")){
-              const imgToRemove = document.getElementById('myImage');
-              if (imgToRemove) {
-                imgToRemove.remove();
-              }
-              var image = new Image();
-              image.src = response
-              document.body.appendChild(image);
-              image.id = 'myImage';
-              }
+              console.log("Response:", response[0]);
+              boardRef.current = response[0]
+              boardimageRef.current = response[1]
+              
+              
    
             } else {
               console.error("Error:", xhr.statusText);
@@ -98,6 +95,7 @@ export default function Editor() {
       }
     }
     const intervalId = setInterval(processFrame, 1000)
+
 
     return () => {
       clearInterval(intervalId)
@@ -158,6 +156,9 @@ export default function Editor() {
               muted
             ></video>
             <canvas ref={canvasRef} width="640" height="480" style={{ display: 'none' }}></canvas>
+            <h1 >{boardRef.current}</h1>
+            <image ref={boardimageRef} src={boardimageRef.current} />
+            
           <div
             class={`${styles.vertBar} resize-code-trigger`}
             style={{ left: `${width}%` }}></div>
