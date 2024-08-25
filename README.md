@@ -2,7 +2,7 @@ its still a little buggy, but it works for the most part.
 
 how to play!
 
-run the site with yarn, or go to this vercel delplioyment https://blot-tac-toe-2sxa-m5zhf7rd3-brights-projects-84294b6b.vercel.app/?vercelToolbarCode=uQij9VahAycwhuM
+run the site with yarn, or go to this vercel delplioyment https://blot-tac-toe-2sxa.vercel.app/ (although i'm now realizing you have to run your own site with yarn anyways because you have to put the url in step 3)
 
 run the collab file(in the fodler called python)(upload the model first also in the python folder)
 
