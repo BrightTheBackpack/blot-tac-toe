@@ -131,7 +131,7 @@ export default function Editor() {
   const { theme } = getStore();
   const INIT_HELP_HEIGHT = 40;
   const [helpHeight, setHelpHeight] = useState(INIT_HELP_HEIGHT);
-  const xpositions = [[0, 83.3333333333], [41.666, 83.333], [83.333, 83.333], [0, 41.666], [41.666, 41.666], [83.333, 41.666], [0,0], [41.66, 0], [83.33, 0]]
+  const xpositions = [[0, 66.666666], [33.333333, 66.666666], [66.666666, 66.666666], [0, 33.333333], [33.333333, 33.333333], [66.6666666, 33.333333], [0,0], [33.3333333, 0], [66.666666, 0]]
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const boardimageRef = useRef(null)
@@ -140,11 +140,11 @@ export default function Editor() {
   };
   function makeBoard(){
     console.log("clicked")
-    run([{"path":[[[0,0],[0,125]],[[41.666666666666664,10],[41.666666666666664,115]],[[83.33333333333333,10],[83.33333333333333,115]],[[125,0],[125,125]],[[0,0],[125,0]],[[10,41.666666666666664],[115,41.666666666666664]],[[10,83.33333333333333],[115,83.33333333333333]],[[0,125],[125,125]]],"style":{"fill":"none","stroke":"black","width":1}}])
+    run([{"path":[[[0,0],[0,100]],[[33.3333,10],[33.33333333,90]],[[66.666666,10],[66.66666,90]],[[100,0],[100,100]],[[0,0],[100,0]],[[10,33.33333333],[90,33.33333333]],[[10,66.66666666],[90,66.66666666]],[[0,100],[100,100]]],"style":{"fill":"none","stroke":"black","width":1}}])
   
   }
   function drawX(x, y){
-    run([{"path":[[[10+x,5+y], [35+x,35+y]],[[35+x,5+y], [10+x,35+y]]], "style":{"fill":"none","stroke":"black","width":1}}])
+    run([{"path":[[[10+x,10+y], [26+x,26+y]],[[26+x,10+y], [10+x,26+y]]], "style":{"fill":"none","stroke":"black","width":1}}])
   }
   useEffect(() => {
 
@@ -175,7 +175,7 @@ export default function Editor() {
         const base64 = canvas.toDataURL()
         // console.log(base64)
         const xhr = new XMLHttpRequest();
-        const url = "https://b407-34-106-6-129.ngrok-free.app/";
+        const url = "https://4585-34-106-6-129.ngrok-free.app/";
         
         // Open a connection to the server
         xhr.open("POST", url, false);
