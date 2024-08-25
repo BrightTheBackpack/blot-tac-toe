@@ -1,4 +1,4 @@
-its still a little buggy, but it works for the most part. there is 1 kinda big bug that ill fix in the morning so i hope yall don't test it untill like later than that
+its still a little buggy, but it works for the most part. 
 
 how to play!
 
@@ -19,6 +19,8 @@ hit the 2nd make new board button
 connect the machine
 
 hit run
+
+if it says no board detected, try adjusting the slider untill you can see a solid colored line running around the board in the preview
 
 make your first move
 
