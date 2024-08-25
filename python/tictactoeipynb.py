@@ -7,6 +7,58 @@ Original file is located at
     https://colab.research.google.com/drive/1eqJiIU8C8R32rpLNfrys6-D8C8ctTDpu
 """
 
+!pip install pyngrok
+!pip install flask_cors
+!pip install tensorflow==2.12.0
+!ngrok authtoken '2kuJ2SpmZEZyRLbmwj8eCHrqeG2_n3z6FFgyHWMx2Eufe4Lf'
+
+from keras.models import load_model  # TensorFlow is required for Keras to work
+from PIL import Image, ImageOps  # Install pillow instead of PIL
+import numpy as np
+
+# Disable scientific notation for clarity
+np.set_printoptions(suppress=True)
+
+# Load the model
+model = load_model("keras_model.h5", compile=False)
+
+# Load the labels
+class_names = open("labels.txt", "r").readlines()
+
+# Create the array of the right shape to feed into the keras model
+# The 'length' or number of images you can put into the array is
+# determined by the first position in the shape tuple, in this case 1
+data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+
+# Replace this with the path to your image
+def ai(image):
+
+
+  # resizing the image to be at least 224x224 and then cropping from the center
+  size = (224, 224)
+  image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+
+  # turn the image into a numpy array
+  image_array = np.asarray(image)
+
+  # Normalize the image
+  normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+
+  # Load the image into the array
+  data[0] = normalized_image_array
+
+  #Predicts the model
+  prediction = model.predict(data)
+  index = np.argmax(prediction)
+  class_name = class_names[index].strip()
+  confidence_score = prediction[0][index]
+  print(f"Class: {class_name}, Confidence Score: {confidence_score}")
+  return class_name
+
+# Print prediction and confidence score
+# print("Class:", class_name[2:], end="")
+# print("Confidence Score:", confidence_score)
+
 # app.py
 import tensorflow as tf
 from flask import Flask, request, jsonify
@@ -61,11 +113,11 @@ def order_points(pts):
     rect[3] = pts[np.argmax(diff)]
     return rect
 
-# def img(image, threshy):
-def img(threshy = 200):
-    image_file = "/videoframe_18215.png"
-    image = Image.open(image_file).convert('RGB')
-    image = np.array(image)
+def img(image, threshy):
+# def img(threshy = 200):
+#     image_file = "/videoframe_18215.png"
+#     image = Image.open(image_file).convert('RGB')
+#     image = np.array(image)
     # #Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Edge detection
@@ -279,11 +331,7 @@ def img(threshy = 200):
     data_uri = f"data:image/png;base64,{base64_string}"
 
     return [board_state, data_uri, data_uri2]
-img()
-
-
-
-!pip install flask_cors
+# img()
 
 import os
 import threading
@@ -345,57 +393,3 @@ def readb64(uri):
   nparr = np.fromstring(base64.b64decode(encoded_data),np.uint8)
   img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
   return img
-
-!pip install pyngrok
-!ngrok authtoken '2kuJ2SpmZEZyRLbmwj8eCHrqeG2_n3z6FFgyHWMx2Eufe4Lf'
-
-#teachable machine code
-
-from keras.models import load_model  # TensorFlow is required for Keras to work
-from PIL import Image, ImageOps  # Install pillow instead of PIL
-import numpy as np
-
-# Disable scientific notation for clarity
-np.set_printoptions(suppress=True)
-
-# Load the model
-model = load_model("keras_model.h5", compile=False)
-
-# Load the labels
-class_names = open("labels.txt", "r").readlines()
-
-# Create the array of the right shape to feed into the keras model
-# The 'length' or number of images you can put into the array is
-# determined by the first position in the shape tuple, in this case 1
-data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-
-# Replace this with the path to your image
-def ai(image):
-
-
-  # resizing the image to be at least 224x224 and then cropping from the center
-  size = (224, 224)
-  image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
-
-  # turn the image into a numpy array
-  image_array = np.asarray(image)
-
-  # Normalize the image
-  normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
-
-  # Load the image into the array
-  data[0] = normalized_image_array
-
-  #Predicts the model
-  prediction = model.predict(data)
-  index = np.argmax(prediction)
-  class_name = class_names[index].strip()
-  confidence_score = prediction[0][index]
-  print(f"Class: {class_name}, Confidence Score: {confidence_score}")
-  return class_name
-
-# Print prediction and confidence score
-# print("Class:", class_name[2:], end="")
-# print("Confidence Score:", confidence_score)
-
-!pip install tensorflow==2.12.0
