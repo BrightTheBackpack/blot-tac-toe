@@ -1,6 +1,7 @@
 its still a little buggy, but it works for the most part. 
 
 how to play!
+https://youtu.be/7ch8zKstqpI
 
 run the site with yarn, or go to this vercel delplioyment https://blot-tac-toe-2sxa.vercel.app/ (although i'm now realizing you have to run your own site with yarn anyways because you have to put the url in step 3)
 
