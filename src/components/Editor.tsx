@@ -175,7 +175,7 @@ export default function Editor() {
         const base64 = canvas.toDataURL()
         // console.log(base64)
         const xhr = new XMLHttpRequest();
-        const url = "https://da36-34-16-146-117.ngrok-free.app/";
+        const url = "https://b407-34-106-6-129.ngrok-free.app/";
         
         // Open a connection to the server
         xhr.open("POST", url, false);
@@ -243,7 +243,7 @@ export default function Editor() {
       }
     }
     
-    const intervalId = setInterval(processFrame, 1000)
+    const intervalId = setInterval(processFrame, 2000)
     // setInterval(runit, 5000)
     return () => {
       clearInterval(intervalId)

@@ -19,14 +19,17 @@ from google.colab.patches import cv2_imshow
 
 
 
-def make_edges_white(image, w,center):
+def make_edges_white(image, w):
     # Convert the image to grayscale if it's not already
     if len(image.shape) == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     else:
         gray = image
-    offset_height = (image.shape[1] / 2) - center[1]
-    offset_width = (image.shape[0]/2) - center[0]
+    # offset_height = (image.shape[1] / 2) - center[1]
+    # offset_width = (image.shape[0]/2) - center[0]
+    offset_height = 0
+    offset_width = 0
+
     #offset_width = image.shape[1] / 2
 
     # Create a binary mask where the edges will be white
@@ -34,12 +37,12 @@ def make_edges_white(image, w,center):
 
     # Define the edge width in pixels
     edge_width = w
-    print(str(edge_width) + " " + str(edge_width-offset_height))
+    # print(str(edge_width) + " " + str(edge_width-offset_height))
     # Set the edge region of the mask to white
-    mask[0:int(edge_width-(2*offset_width)), :] = 255 #try swittching them?
-    mask[int(-edge_width+offset_width):, :] = 255
-    mask[:, 0:int(edge_width-offset_height)] = 255
-    mask[:, int(-edge_width+offset_height):] = 255
+    mask[0:edge_width, :] = 255 #try swittching them?
+    mask[-edge_width:, :] = 255
+    mask[:, 0:edge_width] = 255
+    mask[:, -edge_width:] = 255
 
     # Combine the mask with the grayscale image
     # The mask will be applied to the grayscale image to make the edges white
@@ -48,54 +51,100 @@ def make_edges_white(image, w,center):
     #cv2_imshow(result)
     return result
 
+def order_points(pts):
+    rect = np.zeros((4, 2), dtype="float32")
+    s = pts.sum(axis=1)
+    rect[0] = pts[np.argmin(s)]
+    rect[2] = pts[np.argmax(s)]
+    diff = np.diff(pts, axis=1)
+    rect[1] = pts[np.argmin(diff)]
+    rect[3] = pts[np.argmax(diff)]
+    return rect
 
-def img(image):
-
-    # image_file = "/My photo - Date (1).jpg"
-    # image = Image.open(image_file).convert('RGB')
-    # image = np.array(image)
-    # Convert to grayscale
+# def img(image, threshy):
+def img(threshy = 200):
+    image_file = "/videoframe_18215.png"
+    image = Image.open(image_file).convert('RGB')
+    image = np.array(image)
+    # #Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Edge detection
-    thres, gray = cv2.threshold(gray, 25, 255,cv2.THRESH_BINARY)
-    cv2_imshow(gray)
-    edges = cv2.Canny(gray, 25, 100, apertureSize=3)
-
+    thres, gray = cv2.threshold(gray, threshy, 255,cv2.THRESH_BINARY)
+    # cv2_imshow(gray)
+    edges = cv2.Canny(gray, 10, 225, apertureSize=7, L2gradient = True)
     # Find contours
-    contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    equalized = cv2.equalizeHist(gray)
+    cv2_imshow(gray)
+    contours, _ = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Assume the largest square contour is the Tic-Tac-Toe board
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
     board_contour = None
-    cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
-    #cv2.imwrite('contour_image.jpg', image)  # Save contour image
-    # cv2_imshow(image)
-    thres, image = cv2.threshold(cv2.cvtColor(image,cv2.COLOR_BGR2GRAY), 25, 255,cv2.THRESH_BINARY)
-    # cv2_imshow(image)
+    cv2.drawContours(image, [contours[1]], -1, (0, 255, 0), 2)
+    cv2.drawContours(image, [contours[0]], -1, (255, 255, 0), 2)
+    cv2.drawContours(image, [contours[2]], -1, (255, 0, 0), 2)
+    # cv2.drawContours(image, [contours[3]], -1, (255, 0, 255), 2)
+    # cv2.drawContours(image, [contours[4]], -1, (0, 0, 255), 2)
+    # cv2.drawContours(image, [contours[5]], -1, (0, 255, 255), 2)
 
+    cv2_imshow(image)
+    _, buffer2 = cv2.imencode('.png', image)  # Use '.jpg' for JPEG
+    base64_string2 = base64.b64encode(buffer2).decode('utf-8')
+    data_uri2 = f"data:image/png;base64,{base64_string2}"
+
+
+
+
+    #cv2.imwrite('contour_image.jpg', image)  # Save contour image
+    thres, image = cv2.threshold(cv2.cvtColor(image,cv2.COLOR_BGR2GRAY), 25, 255,cv2.THRESH_BINARY)
+    min_area = image.shape[0] * image.shape[1] * 0.01
+    max_area = image.shape[0] * image.shape[1] * 0.3
     for contour in contours:
-        epsilon = 0.1 * cv2.arcLength(contour, True)
+        epsilon = 0.02 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
+        contour_area = cv2.contourArea(contour)
+        print(contour_area)
+        print(min_area)
+        print(max_area)
+        if contour_area < min_area:
+          print("too small")
+          break
+        if contour_area>max_area:
+          print("too big")
+          continue
+        print("fits")
+        print(len(approx))
+        print(len(approx[0]))
+        print(len(approx[0][0]))
+
+
+
+
+
         if len(approx) == 4:
+            print("is a square")
             board_contour = approx
             break
 
     if board_contour is None:
-        return 'No Tic-Tac-Toe board found', 400
+        return 'No Tic-Tac-Toe board found', 400, data_uri2
     board_contour_img = image.copy()
     cv2.drawContours(board_contour_img, contours, -1, (0, 255, 0), 2)
     #cv2.imwrite('board_contour_image.jpg', board_contour_img)  # Save contour image
     cv2_imshow( board_contour_img)
     # Warp perspective to get a top-down view of the board
     pts = np.float32([point[0] for point in board_contour])
+    pts = order_points(pts)
+
+
     side = max(np.linalg.norm(pts[0] - pts[1]), np.linalg.norm(pts[1] - pts[2]),
                np.linalg.norm(pts[2] - pts[3]), np.linalg.norm(pts[3] - pts[0]))
 
-    dst = np.float32([[0, side - 1],[0, 0], [side - 1, 0],[side - 1, side - 1] ])
+    # dst = np.float32([[0, side - 1],[0, 0], [side - 1, 0],[side - 1, side - 1] ])
+    dst = np.float32([[0, 0], [side - 1, 0], [side - 1, side - 1], [0, side - 1]])
 
     matrix = cv2.getPerspectiveTransform(pts, dst)
     board = cv2.warpPerspective(gray, matrix, (int(side), int(side)))
-    board = cv2.flip(board, 1)
 
     cv2_imshow( board)  # Save warped board image
 
@@ -105,6 +154,7 @@ def img(image):
     for i in range(3):
         for j in range(3):
             cell = board[i * step:(i + 1) * step, j * step:(j + 1) * step]
+            cv2_imshow(cell)
 
 
 
@@ -122,32 +172,46 @@ def img(image):
     # contours, _ = cv2.findContours(edgess, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     #cells[0] = cv2.drawContours(cells[0], contours, -1, (0, 255, 0), 2)
     num = 5
+    row_1 = []
+    row_2 = []
+    row_3 = []
+    index = 0;
     for cell in cells:
+      index += 1
       center = [cell.shape[0]/2,cell.shape[1]/2]
 
 
-      cell = make_edges_white(cell,20, center)
+      cell = make_edges_white(cell, int(cell.shape[0] /5))
+      black_pixels = cell
+      # threshold, black_pixels = cv2.threshold(cell, 100, 255,cv2.THRESH_BINARY)
 
-      threshold, black_pixels = cv2.threshold(cell, 100, 255,cv2.THRESH_BINARY)
+
+      pixel_count = cv2.countNonZero(black_pixels)
+      # black_pixels = make_edges_white(black_pixels,40,center)
+      pixel_count_2 = cv2.countNonZero(black_pixels)
 
 
-      edges = cv2.Canny(black_pixels, 60, 150, apertureSize=3)
+
+      if(pixel_count >= cell.size * 0.999999999):
+        board_state.append("empty")
+      edges = cv2.Canny(black_pixels, 50, 150, apertureSize=3)
       contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-      if len(contours) > 0:
+      if pixel_count <= cell.size * 0.999999999:
           x, y, w, h = cv2.boundingRect(contours[len(contours)-1])
           # cv2.drawContours(black_pixels, contours, -1, (0, 255, 0), 2)
-          print(str(x) + str(y) + str(w) + str(h))
+          # print(str(x) + str(y) + str(w) + str(h))
           #cv2.rectangle(black_pixels, (x, y), (x + w, y + h), (0, 255, 0), 2)
-          print(center)
+          # print(center)
           center = [x+w/2,y+h/2]
-          print(center)
+          # print(center)
+          cv2_imshow(black_pixels)
           rgb = cv2.cvtColor(black_pixels, cv2.COLOR_GRAY2BGR)
           pil_compatible = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
 
           pil_image = Image.fromarray(pil_compatible)
           pil_image.show()
           result = ai(pil_image )
-          print(result+ "result")
+          # print(result+ "result")
           if("Circle" in result):
             board_state.append("O")
           elif( "X" in result):
@@ -155,21 +219,34 @@ def img(image):
           else:
             board_state.append("blank")
 
-          cv2.drawContours(cell, contours, -1, (255, 255, 255), 2)
+          # cv2.drawContours(cell, contours, -1, (255, 255, 255), 2)
           #cv2.circle(black_pixels, (int(center[0]), int(center[1])), 10, (0, 0, 255), -1)
+          # cv2.drawContours(black_pixels, contours, -1, (0, 255, 0), 2)
+
           cv2_imshow(cell)
-      cv2_imshow(black_pixels)
+      if(index == 1):
+          row_1 = cell
+      if(index == 2 or index == 3):
+        row_1 = np.hstack((row_1, cell))
+      if(index == 4):
+        row_2 = cell
+      if(index == 5 or index ==6):
+        row_2 = np.hstack((row_2, cell))
+      if(index == 7):
+        row_3 = cell
+      if(index == 8 or index == 9):
+        row_3 = np.hstack((row_3, cell))
 
 
 
-      pixel_count = cv2.countNonZero(black_pixels)
-      black_pixels = make_edges_white(black_pixels,40,center)
-      pixel_count_2 = cv2.countNonZero(black_pixels)
+
+      # board = np.hstack((board, cell))
+
+      # board = cv2.hconcat([board, cell])
+      # cv2_imshow(black_pixels)
 
 
 
-      if(pixel_count >= cell.size * 0.999999999):
-        board_state.append("empty")
 
 
       # print(str(black_pixels) + " " +  str(cells[0].size))
@@ -192,14 +269,19 @@ def img(image):
     # Respond with the board state
 
     # return board_state
+    final_board = np.vstack((row_1, row_2, row_3))
+    cv2_imshow(final_board)
+    cv2_imshow(board)
     _, buffer = cv2.imencode('.png', board)  # Use '.jpg' for JPEG
 
     #Step 3: Convert the buffer to a base64 string
     base64_string = base64.b64encode(buffer).decode('utf-8')
     data_uri = f"data:image/png;base64,{base64_string}"
 
-    return [board_state, data_uri]
-# img()
+    return [board_state, data_uri, data_uri2]
+img()
+
+
 
 !pip install flask_cors
 
@@ -231,6 +313,11 @@ print(public_url)
 def index():
     data = request.json
     base64_string = data.get("base64")
+    thres = data.get("thres")
+    print(thres)
+    if not thres:
+      thres = 100
+    print(thres)
 
     if not base64_string:
         return jsonify({"error": "No base64 image data provided"}), 400
@@ -241,7 +328,7 @@ def index():
         return jsonify({"error": f"Image could not be read: {str(e)}"}), 400
 
     try:
-        result = img(image)
+        result = img(image, int(thres))
     except Exception as e:
         result = f"error: {str(e)}"
 
