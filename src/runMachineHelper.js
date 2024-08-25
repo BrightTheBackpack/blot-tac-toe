@@ -29,5 +29,5 @@ export async function runMachineHelper(haxidraw, turtles, cancelled = { ref: fal
 
   await haxidraw.servo(1000)
   await delay(200)
-  await haxidraw.goTo(0, 0)
+  await haxidraw.goTo(130, 0)
 }

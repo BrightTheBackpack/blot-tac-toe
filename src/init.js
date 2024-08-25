@@ -21,20 +21,27 @@ export function init() {
   keepAwake();
 
   render(true)
-
+  console.log("here")
   const cm = document.querySelector('.cm-editor')
-  const view = cm.view
-  patchStore({ view })
+  // const view = cm.view
+  // patchStore({ view })
 
   checkCurrentUser();
+  console.log("here2")
 
-  addLoadBackup()
-  // load src if present after default loading behavior
-  addSrcURLParam()
-  addShareIdURLParam();
+  // addLoadBackup()
+  // // load src if present after default loading behavior
+  // addSrcURLParam()
+  // addShareIdURLParam();
+  console.log("here3")
+
+
 
   addBezierControl()
+  console.log("here4")
+
   addMachineControl()
+  console.log("added machine control")
   addNumberScrubbing()
 
   window.addEventListener('keydown', e => {

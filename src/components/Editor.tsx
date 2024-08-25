@@ -1,4 +1,4 @@
-import { getStore } from "../state.js";
+import { getStore, patchStore} from "../state.js";
 import { createListener } from "../createListener.js";
 import styles from "./Editor.module.css";
 import CompatWarning from "./CompatWarning.js";
@@ -10,9 +10,20 @@ import DropBox from "./DropBox.js";
 import LoginModal from "./LoginModal.js";
 import SaveToCloudModal from "./SaveToCloudModal.js";
 import CloudFilesModal from "./CloudFilesModal.js";
+import runMachineHelper from '../runMachineHelper.js'; 
 import CodeMirror from "./CodeMirror.js";
 import { useEffect, useRef, useState } from "preact/hooks";
 import Help from "./Help.js";
+function run(turtle) {
+  const {machineRunning} = getStore()
+  console.log("ran")
+  patchStore({turtles: turtle})
+  const element = document.querySelector('[data-evt-machineTrigger]');
+  if (element && !machineRunning) {
+    element.click();
+  }
+}
+
 function checkForTwo(board){
   for(let i = 0; i < board.length; i){
       if((i-1)%3 == 0){
@@ -75,10 +86,12 @@ function checkForTwo(board){
 }
 
 function WhatMove(board, player){
-  if(board.indexOf("blank") == -1){
+  board.forEach(x=>{console.log(x)})
+  if(board.indexOf("empty") == -1 && board.indexOf("blank") == -1){
+    console.log("i thinks its done")
     return "done"
   }
-  if(checkForTwo(board)===false && board[4] == "blank"){
+  if(checkForTwo(board)===false && board[4] == "empty"){
     return [4, player]
   }else if(checkForTwo(board) ===false){
     let temp = board
@@ -112,13 +125,27 @@ export default function Editor() {
   const [tab, setTab] = useState("workshop");
   const [board, setBoard] = useState("Board State:")
   const [image, setImage] = useState("")
+  const [proccessedImg, setImage2] = useState()
+  const [boardState, setBoardState] = useState(["blank", "blank","blank", "blank","blank", "blank","blank", "blank","blank"])
+  const [thres, setThres] = useState(100)
   const { theme } = getStore();
-
   const INIT_HELP_HEIGHT = 40;
   const [helpHeight, setHelpHeight] = useState(INIT_HELP_HEIGHT);
+  const xpositions = [[0, 83.3333333333], [41.666, 83.333], [83.333, 83.333], [0, 41.666], [41.666, 41.666], [83.333, 41.666], [0,0], [41.66, 0], [83.33, 0]]
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const boardimageRef = useRef(null)
+  const handleSliderChange = (event) => {
+    setThres(event.target.value);
+  };
+  function makeBoard(){
+    console.log("clicked")
+    run([{"path":[[[0,0],[0,125]],[[41.666666666666664,10],[41.666666666666664,115]],[[83.33333333333333,10],[83.33333333333333,115]],[[125,0],[125,125]],[[0,0],[125,0]],[[10,41.666666666666664],[115,41.666666666666664]],[[10,83.33333333333333],[115,83.33333333333333]],[[0,125],[125,125]]],"style":{"fill":"none","stroke":"black","width":1}}])
+  
+  }
+  function drawX(x, y){
+    run([{"path":[[[10+x,5+y], [35+x,35+y]],[[35+x,5+y], [10+x,35+y]]], "style":{"fill":"none","stroke":"black","width":1}}])
+  }
   useEffect(() => {
 
     const video = videoRef.current
@@ -146,9 +173,9 @@ export default function Editor() {
         // Get the image data from the canvas and process it
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         const base64 = canvas.toDataURL()
-        console.log(base64)
+        // console.log(base64)
         const xhr = new XMLHttpRequest();
-        const url = "https://0214-34-173-112-219.ngrok-free.app/";
+        const url = "https://da36-34-16-146-117.ngrok-free.app/";
         
         // Open a connection to the server
         xhr.open("POST", url, false);
@@ -160,9 +187,33 @@ export default function Editor() {
             if (xhr.status === 200) {
               
               const response = JSON.parse(xhr.responseText)["result"];
-              console.log("Response:", response);
-              setBoard("Board State:" + response[0])
+              // console.log("Response:", response);
+             
+              // setBoard(response[0])
+              console.log(typeof response[0])
+              console.log(boardState)
               setImage(response[1])
+              setImage2(response[2])
+              if(boardState != response[0]){
+                console.log("new board!")
+    
+                setBoardState(response[0])
+                console.log(response[0])
+                console.log(response[0].filter(x=> x=="O"))
+                if(response[0].filter(x=> x=="O").length -1 == response[0].filter(x=> x=="X").length){
+                  console.log("Machines Turn")
+                  let move = WhatMove(response[0], "X")[0]
+                  console.log(move)
+                  console.log(xpositions[move])
+                  console.log(xpositions[move][0])
+
+                  drawX(xpositions[move][0], xpositions[move][1])
+                  
+
+                }
+                //run moves
+
+              }
               // boardimageRef.current = response[1]
               
               
@@ -175,7 +226,8 @@ export default function Editor() {
         
         // Prepare the data to be sent
         const base64Image = base64
-        const data = JSON.stringify({ base64: base64Image });
+        // console.log(thres)
+        const data = JSON.stringify({ base64: base64Image , thres: thres});
         
         // Send the request with the base64 data
         xhr.send(data);
@@ -185,7 +237,9 @@ export default function Editor() {
         console.log('Processing frame...')
       }
     }
+    
     const intervalId = setInterval(processFrame, 1000)
+    // setInterval(runit, 5000)
     return () => {
       clearInterval(intervalId)
       if (video && video.srcObject) {
@@ -196,7 +250,7 @@ export default function Editor() {
     }
 
 
-  }, []);
+  }, [thres]);
 
   
   const editorContainer = useRef(null);
@@ -223,7 +277,12 @@ export default function Editor() {
               muted
             ></video>
             <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+            <div>
+            <button onClick={()=>drawX(0,0)}>Make new Board</button>
+            <button onClick={()=>makeBoard()}>Make new Board</button>
 
+
+            </div>
             <div style={{ flex: 1, overflow: "auto" }}>
             </div>
             <div>
@@ -237,6 +296,9 @@ export default function Editor() {
           ></div>
           <div class={styles.right} style={{ width: `${100 - width}%` }}>
           <h1>{board}</h1>
+          <h3>{thres}</h3>
+          <input type="range" min="1" max="200" value={thres} class="slider" id="myRange" onChange={handleSliderChange}></input>
+
             <div
               class={`${styles.horizBar} resize-help-trigger`}
               style={{
@@ -246,6 +308,7 @@ export default function Editor() {
             ></div>
             <div class={styles.help}>
               <img src = {image}></img>
+              <img src = {proccessedImg}></img>
             </div>
           </div>
         </div>
@@ -354,3 +417,25 @@ function addHelpResizing(setHeight, container, theme) {
     bar = null;
   });
 }
+
+
+
+
+// function run(turtles){
+  
+//     const runMachine = () => runMachineHelper(haxidraw, turtles, cancelled)
+
+    
+
+//     if (e.target.innerText.toLowerCase().includes('stop')) {
+   
+//       console.log('cancelled')
+//       return
+//     }
+
+//     runMachine().then(() => {
+//       patchStore({ machineRunning: false })
+//     })
+
+//     patchStore({ machineRunning: true })
+// }

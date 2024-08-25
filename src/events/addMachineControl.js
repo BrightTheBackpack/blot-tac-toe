@@ -12,6 +12,7 @@ export function addMachineControl() {
   const listener = createListener(document.body)
 
   listener('click', '[data-evt-connectTrigger]', async () => {
+    console.log("clicked")
     if (!navigator.serial) {
       alert(
         "Your browser doesn't seem to support the Web Serial API, which is required for the Blot editor to connect to the machine. Chrome Version 89 or above is the recommended browser."
@@ -40,8 +41,10 @@ export function addMachineControl() {
       patchStore({ connected: false })
     }
   })
+  
 
   listener('click', '[data-evt-machineTrigger]', e => {
+
     const { turtles } = getStore()
     const runMachine = () => runMachineHelper(haxidraw, turtles, cancelled)
 
