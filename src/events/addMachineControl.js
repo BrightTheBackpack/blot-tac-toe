@@ -3,7 +3,6 @@ import { createWebSerialBuffer } from "../haxidraw/createWebSerialBuffer.js";
 import { createListener } from '../createListener.js'
 import { getStore, patchStore } from '../state.ts'
 import { runMachineHelper } from '../runMachineHelper.js'
-
 let cancelled = { ref: false };
 
 export function addMachineControl() {

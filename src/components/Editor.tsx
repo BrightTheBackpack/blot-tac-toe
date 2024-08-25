@@ -14,6 +14,7 @@ import runMachineHelper from '../runMachineHelper.js';
 import CodeMirror from "./CodeMirror.js";
 import { useEffect, useRef, useState } from "preact/hooks";
 import Help from "./Help.js";
+import { getBestMove } from "../tictactoe.js";
 function run(turtle) {
   const {machineRunning} = getStore()
   console.log("ran")
@@ -86,7 +87,6 @@ function checkForTwo(board){
 }
 
 function WhatMove(board, player){
-  board.forEach(x=>{console.log(x)})
   if(board.indexOf("empty") == -1 && board.indexOf("blank") == -1){
     console.log("i thinks its done")
     return "done"
@@ -95,7 +95,7 @@ function WhatMove(board, player){
     return [4, player]
   }else if(checkForTwo(board) ===false){
     let temp = board
-    let inital_index = temp.indexOf("blank")
+    let inital_index = temp.indexOf("empty")
     let index = inital_index
     if((index-1) %2 == 0){
       temp.splice(index, 1)
@@ -103,7 +103,7 @@ function WhatMove(board, player){
     for(let j = 0; j<4; j++){
       if((index-1) %2 == 0){
         temp.splice(index, 1)
-        index = temp.indexOf("blank")
+        index = temp.indexOf("empty")
       }else{
         inital_index = index
         break
@@ -166,7 +166,7 @@ export default function Editor() {
       
 
       
-      if (video && ctx && getStore().codeRunning) {
+      if (video && ctx && getStore().codeRunning && !getStore().machineRunning) {
         // Draw the current video frame onto the canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
@@ -192,9 +192,10 @@ export default function Editor() {
               // setBoard(response[0])
               console.log(typeof response[0])
               console.log(boardState)
+              setBoard("Board:" + response[0])
               setImage(response[1])
               setImage2(response[2])
-              if(boardState != response[0]){
+              if(boardState != response[0] && response[0] != "No Tic-Tac-Toe board found"){
                 console.log("new board!")
     
                 setBoardState(response[0])
@@ -202,7 +203,7 @@ export default function Editor() {
                 console.log(response[0].filter(x=> x=="O"))
                 if(response[0].filter(x=> x=="O").length -1 == response[0].filter(x=> x=="X").length){
                   console.log("Machines Turn")
-                  let move = WhatMove(response[0], "X")[0]
+                  let move = getBestMove(response[0])
                   console.log(move)
                   console.log(xpositions[move])
                   console.log(xpositions[move][0])
@@ -210,9 +211,13 @@ export default function Editor() {
                   drawX(xpositions[move][0], xpositions[move][1])
                   
 
+                }else{
+                  
                 }
                 //run moves
 
+              }else{
+                setBoardState(response[0])
               }
               // boardimageRef.current = response[1]
               

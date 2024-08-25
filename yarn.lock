@@ -2369,6 +2369,11 @@ simple-update-notifier@^2.0.0:
   dependencies:
     semver "^7.5.3"
 
+simple_tic_tac_toe_engine@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/simple_tic_tac_toe_engine/-/simple_tic_tac_toe_engine-1.2.0.tgz#ada0c8f44b7f98752558e66b080eebc5e686229d"
+  integrity sha512-z9VIZri1Jz5ru42ANXV/j3+7iG8sB9N2q4E0cVJ8osWnWjM1bAZ1LXpFg6szSvzcVaFEVh9UwLYYW/Ni2NMpZg==
+
 source-map-js@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.0.2.tgz#adbc361d9c62df380125e7f161f71c826f1e490c"
